@@ -1,7 +1,7 @@
 # My UX projects
 
 ## Description
-This repository acts includes the work that I 've done througth the past years.
+This repository includes the work that I 've done through the past years.
 ## Usage
 Just click in this link below to see the projects.
 
