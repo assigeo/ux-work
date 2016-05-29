@@ -1,12 +1,11 @@
-Sliding Panels Template
-=========
+# My UX projects
 
-A simple portfolio template, with project preview images that slide out to reveal the selected project.
+## Description
+This repository acts includes the work that I 've done througth the past years.
+## Usage
+Just click in this link to see the projects
 
-[Article on CodyHouse](http://codyhouse.co/gem/sliding-panels-template/)
-
-[Demo](https://codyhouse.co/demo/sliding-panels-template/index.html)
- 
-[Terms](http://codyhouse.co/terms/)
-
-Images: [Unsplash](https://unsplash.com/)
+Here:
+```
+www.projects.sitebox.gr
+```
