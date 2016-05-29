@@ -7,5 +7,5 @@ Just click in this link to see the projects
 
 Here:
 ```
-www.projects.sitebox.gr
+http://www.projects.sitebox.gr
 ```
