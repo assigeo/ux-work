@@ -3,9 +3,9 @@
 ## Description
 This repository acts includes the work that I 've done througth the past years.
 ## Usage
-Just click in this link to see the projects
+Just click in this link to see the projects: http://www.projects.sitebox.gr
 
 Here:
 ```
-<a href="http://www.projects.sitebox.gr">qwerty</a>
+http://www.projects.sitebox.gr
 ```
