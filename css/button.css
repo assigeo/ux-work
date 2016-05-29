@@ -1,0 +1,14 @@
+.btn {
+	border: 1px solid #fff;
+	background-color: #FF3C15;
+	color: white;
+	padding: 15px 80px 15px 80px;
+	font-size: 120%;
+	font-family: Ubuntu;
+}
+
+a :hover , .btn:hover{
+	background-color:transparent; ;
+	color:#000 ;
+	border: 1px solid #000;
+}
