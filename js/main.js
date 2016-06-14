@@ -1,185 +1,227 @@
-jQuery(document).ready(function($){
-	//cache DOM elements
-	var projectsContainer = $('.cd-projects-container'),
-		projectsPreviewWrapper = projectsContainer.find('.cd-projects-previews'),
-		projectPreviews = projectsPreviewWrapper.children('li'),
-		projects = projectsContainer.find('.cd-projects'),
-		navigationTrigger = $('.cd-nav-trigger'),
-		navigation = $('.cd-primary-nav'),
-		//if browser doesn't support CSS transitions...
-		transitionsNotSupported = ( $('.no-csstransitions').length > 0);
+jQuery(document).ready(function(){
+	var intro = $('.cd-intro-block'),
+		projectsContainer = $('.cd-projects-wrapper'),
+		projectsSlider = projectsContainer.children('.cd-slider'),
+		singleProjectContent = $('.cd-project-content'),
+		sliderNav = $('.cd-slider-navigation');
 
-	var animating = false,
-		//will be used to extract random numbers for projects slide up/slide down effect
-		numRandoms = projects.find('li').length, 
-		uniqueRandoms = [];
+	var resizing = false;
+	
+	//if on desktop - set a width for the projectsSlider element
+	setSliderContainer();
+	$(window).on('resize', function(){
+		//on resize - update projectsSlider width and translate value
+		if( !resizing ) {
+			(!window.requestAnimationFrame) ? setSliderContainer() : window.requestAnimationFrame(setSliderContainer);
+			resizing = true;
+		}
+	});
 
-	//open project
-	projectsPreviewWrapper.on('click', 'a', function(event){
+	//show the projects slider if user clicks the show-projects button
+	intro.on('click', 'a[data-action="show-projects"]', function(event) {
 		event.preventDefault();
-		if( animating == false ) {
-			animating = true;
-			navigationTrigger.add(projectsContainer).addClass('project-open');
-			openProject($(this).parent('li'));
+		intro.addClass('projects-visible');
+		projectsContainer.addClass('projects-visible');
+		intro.hide();
+		//animate single project - entrance animation
+		setTimeout(function(){
+			showProjectPreview(projectsSlider.children('li').eq(0));
+		}, 200);
+	});
+
+	// If user click the author text, then reveal the intro
+	$('.menu .author').on('click', function(event) {
+		if( intro.hasClass('projects-visible')) {
+			intro.fadeIn().show();
+			intro.removeClass('projects-visible');
+			projectsContainer.removeClass('projects-visible');
 		}
 	});
 
-	navigationTrigger.on('click', function(event){
+	// //select a single project - open project-content panel
+	// projectsContainer.on('click', '.cd-slider a', function(event) {
+	// 	var mq = checkMQ();
+	// 	event.preventDefault();
+	// 	if( $(this).parent('li').next('li').is('.current') && (mq == 'desktop') ) {
+	// 		prevSides(projectsSlider);
+	// 	} else if ( $(this).parent('li').prev('li').prev('li').prev('li').is('.current')  && (mq == 'desktop') ) {
+	// 		nextSides(projectsSlider);
+	// 	} else {
+	// 		singleProjectContent.addClass('is-visible');
+	// 	}
+	// });
+
+	//select a single project - open project-content panel
+	projectsContainer.on('click', '.cd-slider a', function(event) {
 		event.preventDefault();
-		
-		if( animating == false ) {
-			animating = true;
-			if( navigationTrigger.hasClass('project-open') ) {
-				//close visible project
-				navigationTrigger.add(projectsContainer).removeClass('project-open');
-				closeProject();
-			} else if( navigationTrigger.hasClass('nav-visible') ) {
-				//close main navigation
-				navigationTrigger.removeClass('nav-visible');
-				navigation.removeClass('nav-clickable nav-visible');
-				if(transitionsNotSupported) projectPreviews.removeClass('slide-out');
-				else slideToggleProjects(projectsPreviewWrapper.children('li'), -1, 0, false);
-			} else {
-				//open main navigation
-				navigationTrigger.addClass('nav-visible');
-				navigation.addClass('nav-visible');
-				if(transitionsNotSupported) projectPreviews.addClass('slide-out');
-				else slideToggleProjects(projectsPreviewWrapper.children('li'), -1, 0, true);
-			}
-		}	
-
-		if(transitionsNotSupported) animating = false;
-	});
-
-	//scroll down to project info
-	projectsContainer.on('click', '.scroll', function(){
-		projectsContainer.animate({'scrollTop':$(window).height()}, 500); 
-	});
-
-	//check if background-images have been loaded and show project previews
-	projectPreviews.children('a').bgLoaded({
-	  	afterLoaded : function(){
-	   		showPreview(projectPreviews.eq(0));
-	  	}
-	});
-
-	function showPreview(projectPreview) {
-		if(projectPreview.length > 0 ) {
-			setTimeout(function(){
-				projectPreview.addClass('bg-loaded');
-				showPreview(projectPreview.next());
-			}, 150);
-		}
-	}
-
-	function openProject(projectPreview) {
-		var projectIndex = projectPreview.index();
-		projects.children('li').eq(projectIndex).add(projectPreview).addClass('selected');
-		
-		if( transitionsNotSupported ) {
-			projectPreviews.addClass('slide-out').removeClass('selected');
-			projects.children('li').eq(projectIndex).addClass('content-visible');
-			animating = false;
-		} else { 
-			slideToggleProjects(projectPreviews, projectIndex, 0, true);
-		}
-	}
-
-	function closeProject() {
-		projects.find('.selected').removeClass('selected').on('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function(){
-			$(this).removeClass('content-visible').off('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend');
-			slideToggleProjects(projectsPreviewWrapper.children('li'), -1, 0, false);
-		});
-
-		//if browser doesn't support CSS transitions...
-		if( transitionsNotSupported ) {
-			projectPreviews.removeClass('slide-out');
-			projects.find('.content-visible').removeClass('content-visible');
-			animating = false;
-		}
-	}
-
-	function slideToggleProjects(projectsPreviewWrapper, projectIndex, index, bool) {
-		if(index == 0 ) createArrayRandom();
-		if( projectIndex != -1 && index == 0 ) index = 1;
-
-		var randomProjectIndex = makeUniqueRandom();
-		if( randomProjectIndex == projectIndex ) randomProjectIndex = makeUniqueRandom();
-		
-		if( index < numRandoms - 1 ) {
-			projectsPreviewWrapper.eq(randomProjectIndex).toggleClass('slide-out', bool);
-			setTimeout( function(){
-				//animate next preview project
-				slideToggleProjects(projectsPreviewWrapper, projectIndex, index + 1, bool);
-			}, 150);
-		} else if ( index == numRandoms - 1 ) {
-			//this is the last project preview to be animated 
-			projectsPreviewWrapper.eq(randomProjectIndex).toggleClass('slide-out', bool).one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function(){
-				if( projectIndex != -1) {
-					projects.children('li.selected').addClass('content-visible');
-					projectsPreviewWrapper.eq(projectIndex).addClass('slide-out').removeClass('selected');
-				} else if( navigation.hasClass('nav-visible') && bool ) {
-					navigation.addClass('nav-clickable');
-				}
-				projectsPreviewWrapper.eq(randomProjectIndex).off('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend');
-				animating = false;
-			});
-		}
-	}
-
-	//http://stackoverflow.com/questions/19351759/javascript-random-number-out-of-5-no-repeat-until-all-have-been-used
-	function makeUniqueRandom() {
-	    var index = Math.floor(Math.random() * uniqueRandoms.length);
-	    var val = uniqueRandoms[index];
-	    // now remove that value from the array
-	    uniqueRandoms.splice(index, 1);
-	    return val;
-	}
-
-	function createArrayRandom() {
-		//reset array
-		uniqueRandoms.length = 0;
-		for (var i = 0; i < numRandoms; i++) {
-            uniqueRandoms.push(i);
-        }
+		if( jQuery(this).parent('li').next('li').is('.current') ) {
+			prevSides(projectsSlider);
+		} else if ( jQuery(this).parent('li').prev('li').prev('li').prev('li').is('.current')) {
+			nextSides(projectsSlider);
+		} else {
+		var id= jQuery(this).attr('href');
+		//singleProjectContent.addClass('is-visible');
+		jQuery(''+id+'').addClass('is-visible');
 	}
 });
 
- /*
- * BG Loaded
- * Copyright (c) 2014 Jonathan Catmull
- * Licensed under the MIT license.
- */
- (function($){
- 	$.fn.bgLoaded = function(custom) {
-	 	var self = this;
+	//close single project content
+	singleProjectContent.on('click', '.close', function(event){
+		event.preventDefault();
+		singleProjectContent.removeClass('is-visible');
+	});
 
-		// Default plugin settings
-		var defaults = {
-			afterLoaded : function(){
-				this.addClass('bg-loaded');
-			}
-		};
+	//go to next/pre slide - clicking on the next/prev arrow
+	sliderNav.on('click', '.next', function(){
+		nextSides(projectsSlider);
+	});
+	sliderNav.on('click', '.prev', function(){
+		prevSides(projectsSlider);
+	});
 
-		// Merge default and user settings
-		var settings = $.extend({}, defaults, custom);
+	//go to next/pre slide - keyboard navigation
+	$(document).keyup(function(event){
+		var mq = checkMQ();
+		if(event.which=='37' &&  intro.hasClass('projects-visible') && !(sliderNav.find('.prev').hasClass('inactive')) && (mq == 'desktop') ) {
+			prevSides(projectsSlider);
+		} else if( event.which=='39' &&  intro.hasClass('projects-visible') && !(sliderNav.find('.next').hasClass('inactive')) && (mq == 'desktop') ) {
+			nextSides(projectsSlider);
+		} else if(event.which=='27' && singleProjectContent.hasClass('is-visible')) {
+			singleProjectContent.removeClass('is-visible');
+		}
+	});
 
-		// Loop through element
-		self.each(function(){
-			var $this = $(this),
-				bgImgs = $this.css('background-image').split(', ');
-			$this.data('loaded-count',0);
-			$.each( bgImgs, function(key, value){
-				var img = value.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
-				$('<img/>').attr('src', img).load(function() {
-					$(this).remove(); // prevent memory leaks
-					$this.data('loaded-count',$this.data('loaded-count')+1);
-					if ($this.data('loaded-count') >= bgImgs.length) {
-						settings.afterLoaded.call($this);
-					}
-				});
-			});
+	projectsSlider.on('swipeleft', function(){
+		var mq = checkMQ();
+		if( !(sliderNav.find('.next').hasClass('inactive')) && (mq == 'desktop') ) nextSides(projectsSlider);
+	});
 
+	projectsSlider.on('swiperight', function(){
+		var mq = checkMQ();
+		if ( !(sliderNav.find('.prev').hasClass('inactive')) && (mq == 'desktop') ) prevSides(projectsSlider);
+	});
+
+	function showProjectPreview(project) {
+		if(project.length > 0 ) {
+			setTimeout(function(){
+				project.addClass('slides-in');
+				showProjectPreview(project.next());
+			}, 50);
+		}
+	}
+
+	function checkMQ() {
+		//check if mobile or desktop device
+		return window.getComputedStyle(document.querySelector('.cd-projects-wrapper'), '::before').getPropertyValue('content').replace(/'/g, "").replace(/"/g, "");
+	}
+
+	function setSliderContainer() {
+		var mq = checkMQ();
+		if(mq == 'desktop') {
+			var	slides = projectsSlider.children('li'),
+				slideWidth = slides.eq(0).width(),
+				marginLeft = Number(projectsSlider.children('li').eq(1).css('margin-left').replace('px', '')),
+				sliderWidth = ( slideWidth + marginLeft )*( slides.length + 1 ) + 'px',
+				slideCurrentIndex = projectsSlider.children('li.current').index();
+			projectsSlider.css('width', sliderWidth);
+			( slideCurrentIndex != 0 ) && setTranslateValue(projectsSlider, (  slideCurrentIndex * (slideWidth + marginLeft) + 'px'));
+		} else {
+			projectsSlider.css('width', '');
+			setTranslateValue(projectsSlider, 0);
+		}
+		resizing = false;
+	}
+
+	function nextSides(slider) {
+		var actual = slider.children('.current'),
+			index = actual.index(),
+			following = actual.nextAll('li').length,
+			width = actual.width(),
+			marginLeft = Number(slider.children('li').eq(1).css('margin-left').replace('px', ''));
+
+		index = (following > 4 ) ? index + 3 : index + following - 2;
+		//calculate the translate value of the slider container
+		translate = index * (width + marginLeft) + 'px';
+
+		slider.addClass('next');
+		setTranslateValue(slider, translate);
+		slider.one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function(){
+			updateSlider('next', actual, slider, following);
 		});
-	};
-})(jQuery);
+
+		if( $('.no-csstransitions').length > 0 ) updateSlider('next', actual, slider, following);
+	}
+
+	function prevSides(slider) {
+		var actual = slider.children('.previous'),
+			index = actual.index(),
+			width = actual.width(),
+			marginLeft = Number(slider.children('li').eq(1).css('margin-left').replace('px', ''));
+
+		translate = index * (width + marginLeft) + 'px';
+
+		slider.addClass('prev');
+		setTranslateValue(slider, translate);
+		slider.one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function(){
+			updateSlider('prev', actual, slider);
+		});
+
+		if( $('.no-csstransitions').length > 0 ) updateSlider('prev', actual, slider);
+	}
+
+	function updateSlider(direction, actual, slider, numerFollowing) {
+		if( direction == 'next' ) {
+			
+			slider.removeClass('next').find('.previous').removeClass('previous');
+			actual.removeClass('current');
+			if( numerFollowing > 4 ) {
+				actual.addClass('previous').next('li').next('li').next('li').addClass('current');
+			} else if ( numerFollowing == 4 ) {
+				actual.next('li').next('li').addClass('current').prev('li').prev('li').addClass('previous');
+			} else {
+				actual.next('li').addClass('current').end().addClass('previous');
+			}
+		} else {
+			
+			slider.removeClass('prev').find('.current').removeClass('current');
+			actual.removeClass('previous').addClass('current');
+			if(actual.prevAll('li').length > 2 ) {
+				actual.prev('li').prev('li').prev('li').addClass('previous');
+			} else {
+				( !slider.children('li').eq(0).hasClass('current') ) && slider.children('li').eq(0).addClass('previous');
+			}
+		}
+		
+		updateNavigation();
+	}
+
+	function updateNavigation() {
+		//update visibility of next/prev buttons according to the visible slides
+		var current = projectsContainer.find('li.current');
+		(current.is(':first-child')) ? sliderNav.find('.prev').addClass('inactive') : sliderNav.find('.prev').removeClass('inactive');
+		(current.nextAll('li').length < 3 ) ? sliderNav.find('.next').addClass('inactive') : sliderNav.find('.next').removeClass('inactive');
+	}
+
+	function setTranslateValue(item, translate) {
+		item.css({
+		    '-moz-transform': 'translateX(-' + translate + ')',
+		    '-webkit-transform': 'translateX(-' + translate + ')',
+			'-ms-transform': 'translateX(-' + translate + ')',
+			'-o-transform': 'translateX(-' + translate + ')',
+			'transform': 'translateX(-' + translate + ')',
+		});
+	}
+
+	// SweetAlert Contact Button
+	$('.contact-btn').on('click', function() {
+		swal({
+		  title: 'Write your email and wait for respond: ',
+		  input: 'email',
+		}).then(function(email) {
+		  swal({
+		    type: 'success',
+		    html: 'Your email: <i>' + email + '</i> just send to me! <br/> Wait for me to respond...'
+		  });
+		})
+	});
+});
